@@ -25,7 +25,7 @@ class p7(object):
             return
 
         # packet is a "normal" POX packet object
-        log.debug("GOT A NEW PACKET")
+        log.debug("GOT A NEW PACKET {}".format(packet.dump()))
         tcphdr = packet.find('tcp')
 
         if tcphdr is None:
@@ -37,12 +37,12 @@ class p7(object):
 
         else: 
             # for any TCP traffic, install Openflow rules
-            if ( (packet.srcip != IPAddr('10.0.0.4') and packet.dstip != IPAddr('10.0.0.4')) 
+            if ( (packet.payload.srcip != IPAddr('10.0.0.4') and packet.payload.dstip != IPAddr('10.0.0.4')) 
                     or inport==5 ):
                 # packet is not suspicious or is from middlebox
                 # send directly to intended destination
-                log.debug("packet is TCP traffic, but it is safe")
-                outport = int(str(packet.dstip)[-1])
+                log.debug("packet is TCP traffic, but it is safe/from middlebox")
+                outport = int(str(packet.payload.dstip)[-1])
                 log.debug("outport = {}".format(outport))
 
                 actions = [ of.ofp_action_output(port = outport) ]
@@ -56,7 +56,7 @@ class p7(object):
             else:
                 # packet is suspicious; forward to middlebox
                 log.debug("packet is suspicious; forward to middlebox")
-                actions = [ ofp_action_dl_addr.set_dst(EthAddr('00:00:00:00:00:05')),
+                actions = [ of.ofp_action_dl_addr.set_dst(EthAddr('00:00:00:00:00:05')),
                             of.ofp_action_output(port=5) ]
                 flowmod = of.ofp_flow_mod(command=of.OFPFC_ADD,
                                     idle_timeout=10,

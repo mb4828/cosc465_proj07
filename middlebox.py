@@ -113,6 +113,7 @@ class Middlebox(object):
         '''
         line = time.asctime() + "\t" + key + "\t" + self.acont[key] + "\n"
         self.clog.write(line)
+        self.clog.flush()
         del self.acont[key]
 
     def getkey(self, pkt):
